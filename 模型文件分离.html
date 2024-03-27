@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="utf-8" content="text/html; charset=GBK">
+        <meta name="viewport" content="width=device-width">
+        <title>模型文件分离</title>
+    </head>
+    <body>
+        <h1>模型文件分离</h1>
+        
+        <hr>
+
+        <div style="text-indent: 10px;">
+            <p>原文件</p>
+            <textarea id="input" name="input" style="padding:10px;" cols="40", rows="5"></textarea>
+        </div>
+        
+        <div>
+            <textarea id="id"    name="id" style="padding:5px;" cols="20", rows="1">序号</textarea>
+            <br>
+            <button onclick="generate()">生成</button>
+        </div>
+        <hr/>
+
+        <div style="text-indent: 10px;">
+            <p>结果</p>
+            <textarea id="output" name="output" style="padding:10px;" cols="40", rows="5"></textarea>
+        </div>
+        <hr>
+
+        <div style="text-indent: 10px;">
+            
+        </div>
+        
+        <!-- 样式 -->
+        <style type="text/css">
+            table td{padding:5px;}
+        </style>
+        
+        <!-- 主要处理 -->
+        <script>
+            var inputJson = undefined;
+            function generate(){
+                if(inputJson===undefined){
+                    let input = document.getElementById("input").value
+                    inputJson = JSON.parse(input);
+                }
+                
+                let id = document.getElementById("id").value
+                let res = inputJson[id];
+                res = JSON.stringify(res);
+
+                document.getElementById("output").value = res
+            }
+        </script>
+    </body>
+</html>
+

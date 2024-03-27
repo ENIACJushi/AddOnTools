@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="utf-8" content="text/html; charset=GBK">
+        <meta name="viewport" content="width=device-width">
+        <title>模型文件合并</title>
+    </head>
+    <body>
+        <h1>模型文件合并</h1>
+        
+        <hr>
+
+        <div style="text-indent: 10px;">
+            <p>将多个模型文件合并为一个</p>
+            <div>
+                <table border="1" style="margin-inline:10px;" id="result_block">
+                    <tr><th>序号</th><th colspan="2">信息</th></tr>
+                    <tr><td align="center">*</td><td colspan="1">待上传</td></tr>                    
+                </table>
+                <input type="file" id="file" name="file" style="padding:10px;" multiple/>
+            </div>
+        </div>
+        
+        <hr>
+        <div>
+            <button onclick="generate()">生成</button>
+        </div>
+
+        <div style="text-indent: 10px;">
+            
+        </div>
+        
+        <!-- 样式 -->
+        <style type="text/css">
+            table td{padding:5px;}
+        </style>
+        
+        <!-- 主要处理 -->
+        <script>
+            var fileList = []; // [ {"name":"xxx.xx"} ]
+            var processing = false; // 正在处理
+
+            //// 添加文件事件 ////
+            const fileUploader = document.getElementById('file');
+            fileUploader.addEventListener('change', (event) => {
+                const files = event.target.files;
+                for(let i = 0; i < files.length; i++){
+                    fileList.push(files[i]);
+                }
+                
+                // 更新列表
+                refreshList();
+            });
+            function refreshList(){
+                if(processing) return;
+                const res = document.getElementById('result_block');
+                let msg = `<tr><th>序号</th><th colspan="2">信息</th></tr>`;
+                for(let i = 0; i < fileList.length; i++){
+                    msg += `<tr><td align="center">${i+1}</td>`; // 序号 0为默认包预留
+                    msg += `<td>${fileList[i].name}</td>`; // 文件名
+                    msg += `<td><button onclick='file_up(${i})'>↑</button> <button onclick='file_down(${i})'>↓</button> <button onclick='file_del(${i})'>x</button></td></tr>`
+                }
+                res.innerHTML = msg;
+            }
+            //// 改变文件位置 ////
+            function file_up(num){
+                if(num == 0 || processing) return;
+                var temp = fileList[num-1];
+                fileList[num-1] = fileList[num]
+                fileList[num] = temp;
+                refreshList();
+            }
+            function file_down(num){
+                if(num >= fileList.length - 1 || processing) return;
+                var temp = fileList[num+1];
+                fileList[num+1] = fileList[num]
+                fileList[num] = temp;
+                refreshList();
+            }
+            function file_del(num){
+                if(processing) return;
+                fileList.splice(num, 1);
+                refreshList();
+            }
+            // 将字符串保存为文件
+            function saveFile(filename, content) {
+                // 创建Blob对象
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                
+                // 创建一个指向Blob对象的URL
+                const url = URL.createObjectURL(blob);
+                
+                // 创建一个a标签
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', filename);
+                
+                // 触发下载
+                document.body.appendChild(link);
+                link.click();
+                
+                // 清理
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+            
+            
+            var inputJson = undefined;
+            function generate(){
+                let res = {"format_version":"1.8.0"};
+                let remains = fileList.length;
+                for(let i = 0; i < fileList.length; i++){
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        let geo = JSON.parse(e.target.result);
+                        console.log(fileList[i])
+                        for(let key in geo){
+                            if(key !== "format_version"){
+                                res[key] = geo[key];
+                            }
+                        }
+                        remains--;
+                    };
+                    reader.readAsText(fileList[i])
+                }
+                // 等待处理完成
+                let wait_interval = setInterval(()=>{
+                    if(remains<=0){
+                        clearInterval(wait_interval);
+                        saveFile("geometry.json", JSON.stringify(res));
+                    }
+                }, 100);
+            }
+        </script>
+    </body>
+</html>
+
